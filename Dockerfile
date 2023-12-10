@@ -1,12 +1,20 @@
-# Use an official Python runtime as a parent image
-FROM python:3.8-slim
+# Stage 1: Build Stage
+FROM python:3.8-slim AS builder
 
-# Set the working directory to /app
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
-COPY . /app
+COPY requirements.txt .
 
-# Run app.py when the container launches
+# Install dependencies separately to leverage Docker cache
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Stage 2: Production Stage
+FROM python:3.8-slim
+
+WORKDIR /app
+
+COPY --from=builder /usr/local/lib/python3.8/site-packages /usr/local/lib/python3.8/site-packages
+COPY . .
+
 CMD ["python", "app.py"]
 
