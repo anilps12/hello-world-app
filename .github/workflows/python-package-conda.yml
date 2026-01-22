@@ -1,34 +1,35 @@
-name: Python Package using Conda
+name: Build and Deploy React App
 
-on: [push]
+permissions:
+  contents: write
+
+on:
+  push:
+    branches:
+      - main
 
 jobs:
-  build-linux:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 5
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.10'
-    - name: Add conda to system path
-      run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
-        echo $CONDA/bin >> $GITHUB_PATH
-    - name: Install dependencies
-      run: |
-        conda env update --file environment.yml --name base
-    - name: Lint with flake8
-      run: |
-        conda install flake8
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
-      run: |
-        conda install pytest
-        pytest
+     # 2️⃣ Create release branch after PR merge
+      - name: Create release branch
+        run: |
+          # Configure git
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          # Create release branch with date
+          RELEASE_BRANCH="release-$(date +'%Y-%m-%d')"
+
+          echo "Creating release branch: $RELEASE_BRANCH"
+
+          # Check if branch already exists
+          if git ls-remote --exit-code --heads origin $RELEASE_BRANCH; then
+            echo "Release branch already exists. Skipping creation."
+          else
+            git checkout -b $RELEASE_BRANCH
+            git push origin $RELEASE_BRANCH
+            echo "Release branch pushed successfully."
+          fi
