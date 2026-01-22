@@ -1,0 +1,41 @@
+name: Build and Deploy React App
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout repository (FULL HISTORY REQUIRED)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2️⃣ Create release branch after PR merge
+      - name: Create release branch
+        run: |
+          # Configure git
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          # Create release branch with date
+          RELEASE_BRANCH="release-$(date +'%Y-%m-%d')"
+
+          echo "Creating release branch: $RELEASE_BRANCH"
+
+          # Check if branch already exists
+          if git ls-remote --exit-code --heads origin $RELEASE_BRANCH; then
+            echo "Release branch already exists. Skipping creation."
+          else
+            git checkout -b $RELEASE_BRANCH
+            git push origin $RELEASE_BRANCH
+            echo "Release branch pushed successfully."
+          fi
